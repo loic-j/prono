@@ -5,7 +5,7 @@
 ### Tech Stack
 - **Monorepo**: pnpm workspaces
 - **Backend** (`apps/api`): Hono + TypeScript + SuperTokens auth + OpenAPI
-- **Frontend** (`apps/web`): React + TypeScript + Vite
+- **Frontend** (`apps/web`): React + TypeScript + Vite + SuperTokens UI
 - **Shared** (`packages/types`): Zod schemas + TypeScript types
 - **Infrastructure**: Docker, PostgreSQL (planned)
 
@@ -32,6 +32,10 @@ packages/
 - **Dependency Rule**: Dependencies point inward (handlers → usecases → domain)
 - **Infrastructure Isolation**: Auth, DB, external services in `infra/`
 
+### General instructions
+- Update this claude.md file when core changes are made
+- When reading environment variable, use config file that will load the variable or use default value working for local developement if the env variable is not present.
+
 ## WHY
 
 <!-- To be filled: Project purpose and goals -->
@@ -42,9 +46,12 @@ packages/
 
 ## Documentation Index
 
+### Core Documentation
+- [Authentication Guide](AUTHENTICATION.md) - Complete authentication setup & usage guide
+
 ### Backend Documentation
 - [Architecture Overview](apps/api/ARCHITECTURE.md) - Clean architecture & DDD structure
-- [Authentication Setup](apps/api/AUTH_SETUP.md) - SuperTokens integration & testing
+- [Authentication Setup](apps/api/AUTH_SETUP.md) - SuperTokens backend integration & testing
 
 ### Commands
 ```bash
@@ -75,4 +82,6 @@ cd apps/api && pnpm type-check
 ### Environment
 - Backend runs on `http://localhost:3000`
 - Frontend runs on `http://localhost:5173`
-- See `apps/api/AUTH_SETUP.md` for SuperTokens configuration
+- Authentication uses SuperTokens (frontend + backend integration)
+- See [AUTHENTICATION.md](AUTHENTICATION.md) for complete auth setup and usage
+- See [apps/api/AUTH_SETUP.md](apps/api/AUTH_SETUP.md) for backend-only SuperTokens testing
