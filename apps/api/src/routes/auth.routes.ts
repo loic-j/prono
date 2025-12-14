@@ -12,8 +12,8 @@ import { middleware } from "supertokens-node/framework/custom";
  */
 export const authRoutes = new Hono();
 
-// SuperTokens middleware to handle all auth requests
-authRoutes.all("/auth/*", async (c) => {
+// Shared handler for SuperTokens middleware
+const handleSupertokensRequest = async (c: any) => {
   console.log(`[AUTH] Handling ${c.req.method} ${new URL(c.req.url).pathname}`);
 
   let responseSent = false;
@@ -124,4 +124,8 @@ authRoutes.all("/auth/*", async (c) => {
     console.error("SuperTokens middleware error:", error);
     return c.json({ error: "Internal server error" }, 500);
   }
-});
+};
+
+// Handle both /auth and /auth/* to catch all authentication endpoints
+authRoutes.all("/auth", handleSupertokensRequest);
+authRoutes.all("/auth/*", handleSupertokensRequest);
