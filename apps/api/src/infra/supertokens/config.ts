@@ -25,6 +25,36 @@ export function initSuperTokens() {
       apiBasePath: "/auth",
       websiteBasePath: "/auth",
     },
-    recipeList: [],
+    recipeList: [
+      // Email/Password authentication
+      EmailPassword.init(),
+
+      // Third-party authentication (Google, GitHub, etc.)
+      ThirdParty.init({
+        signInAndUpFeature: {
+          providers: [
+            // Google OAuth
+            {
+              config: {
+                thirdPartyId: "google",
+                clients: [
+                  {
+                    clientId: process.env.GOOGLE_CLIENT_ID || "",
+                    clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+                  },
+                ],
+              },
+            },
+            // You can add more providers here (GitHub, Apple, etc.)
+          ],
+        },
+      }),
+
+      // Session management
+      Session.init({
+        cookieSameSite: "lax",
+        cookieSecure: process.env.NODE_ENV === "production",
+      }),
+    ],
   });
 }
