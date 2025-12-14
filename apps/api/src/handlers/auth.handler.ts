@@ -1,39 +1,42 @@
 import { Context } from "hono";
 import { authService } from "../infra/supertokens";
 import { logger } from "../utils/logger";
+import {
+  InvalidSessionError,
+  UserNotFoundError,
+  SuperTokensError,
+} from "../domain/errors";
 
 /**
  * Get current user handler
  * Returns the currently authenticated user's information
  */
 export const getCurrentUserHandler = async (c: any) => {
-  try {
-    const session = c.get("session");
+  const session = c.get("session");
 
-    if (!session) {
-      return c.json({ error: "Not authenticated" }, 401);
-    }
-
-    const user = await authService.getUserById(session.getUserId());
-
-    if (!user) {
-      return c.json({ error: "User not found" }, 404);
-    }
-
-    return c.json(
-      {
-        id: user.id,
-        email: user.email,
-        displayName: user.getDisplayName(),
-        timeJoined: user.timeJoined,
-        isVerified: user.isVerified(),
-      },
-      200
-    );
-  } catch (error) {
-    logger.error({ error }, "Error getting current user");
-    return c.json({ error: "Internal server error" }, 500);
+  if (!session) {
+    throw new InvalidSessionError("Not authenticated");
   }
+
+  const user = await authService.getUserById(session.getUserId());
+
+  if (!user) {
+    throw new UserNotFoundError(
+      session.getUserId(),
+      "Authenticated user not found"
+    );
+  }
+
+  return c.json(
+    {
+      id: user.id,
+      email: user.email,
+      displayName: user.getDisplayName(),
+      timeJoined: user.timeJoined,
+      isVerified: user.isVerified(),
+    },
+    200
+  );
 };
 
 /**
@@ -41,13 +44,13 @@ export const getCurrentUserHandler = async (c: any) => {
  * Signs out the current user by revoking their session
  */
 export const signOutHandler = async (c: any) => {
+  const session = c.get("session");
+
+  if (!session) {
+    throw new InvalidSessionError("Not authenticated");
+  }
+
   try {
-    const session = c.get("session");
-
-    if (!session) {
-      return c.json({ error: "Not authenticated" }, 401);
-    }
-
     await session.revokeSession();
 
     return c.json(
@@ -56,8 +59,10 @@ export const signOutHandler = async (c: any) => {
       },
       200
     );
-  } catch (error) {
-    logger.error({ error }, "Error signing out");
-    return c.json({ error: "Internal server error" }, 500);
+  } catch (error: any) {
+    logger.error({ error }, "Error revoking session");
+    throw new SuperTokensError("Failed to sign out", {
+      originalError: error.message,
+    });
   }
 };

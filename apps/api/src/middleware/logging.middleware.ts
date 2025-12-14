@@ -1,6 +1,7 @@
 import { Context, Next } from "hono";
 import { logger } from "../utils/logger";
 import { trace, context as otelContext, propagation } from "@opentelemetry/api";
+import { ApplicationError } from "../domain/errors";
 
 /**
  * Logging middleware that:
@@ -109,8 +110,49 @@ export async function loggingMiddleware(c: Context, next: Next) {
 
 /**
  * Error handling middleware that logs errors with trace context
+ * Parses ApplicationError instances and returns appropriate HTTP responses
  */
 export function errorLoggingMiddleware(error: Error, c: Context) {
+  // Check if it's one of our custom application errors
+  if (error instanceof ApplicationError) {
+    // Log based on error type - operational errors are logged as warnings, others as errors
+    const logMethod = error.isOperational ? logger.warn : logger.error;
+
+    logMethod(
+      {
+        type: "application_error",
+        error: {
+          name: error.name,
+          code: error.code,
+          message: error.message,
+          statusCode: error.statusCode,
+          context: error.context,
+          stack:
+            process.env.NODE_ENV === "production" ? undefined : error.stack,
+        },
+        method: c.req.method,
+        url: c.req.url,
+      },
+      `Application error: ${error.code}`
+    );
+
+    // Return structured error response
+    return c.json(
+      {
+        error: {
+          code: error.code,
+          message: error.message,
+          ...(error.context &&
+            process.env.NODE_ENV !== "production" && {
+              context: error.context,
+            }),
+        },
+      },
+      error.statusCode as any
+    );
+  }
+
+  // Unknown/unhandled errors - log as critical errors
   logger.error(
     {
       type: "unhandled_error",
@@ -125,11 +167,16 @@ export function errorLoggingMiddleware(error: Error, c: Context) {
     "Unhandled error"
   );
 
+  // Return generic error response for unknown errors
   return c.json(
     {
-      error: "Internal Server Error",
-      message:
-        process.env.NODE_ENV === "production" ? undefined : error.message,
+      error: {
+        code: "INTERNAL_SERVER_ERROR",
+        message:
+          process.env.NODE_ENV === "production"
+            ? "Internal server error"
+            : error.message,
+      },
     },
     500
   );
