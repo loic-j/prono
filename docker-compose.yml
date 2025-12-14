@@ -37,22 +37,42 @@ services:
       - api
     restart: unless-stopped
 
-  # Uncomment when you need a database
-  # db:
-  #   image: postgres:16-alpine
-  #   environment:
-  #     - POSTGRES_USER=prono
-  #     - POSTGRES_PASSWORD=prono
-  #     - POSTGRES_DB=prono
-  #   volumes:
-  #     - postgres_data:/var/lib/postgresql/data
-  #   ports:
-  #     - "5432:5432"
-  #   restart: unless-stopped
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "pg_isready -U prono"]
-  #     interval: 10s
-  #     timeout: 5s
-  #     retries: 5
-# volumes:
-#   postgres_data:
+  db:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=prono
+      - POSTGRES_PASSWORD=prono
+      - POSTGRES_DB=prono
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U prono"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # SuperTokens Core (for local development)
+  supertokens:
+    image: registry.supertokens.io/supertokens/supertokens-postgresql:9.2
+    environment:
+      POSTGRESQL_HOST: db
+      POSTGRESQL_PORT: 5432
+      POSTGRESQL_DATABASE_NAME: prono
+      POSTGRESQL_USER: prono
+      POSTGRESQL_PASSWORD: prono
+    ports:
+      - "3567:3567"
+    restart: unless-stopped
+    depends_on:
+      - db
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3567/hello"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:

@@ -4,7 +4,7 @@ import Session from "supertokens-auth-react/recipe/session";
 
 /**
  * SuperTokens Configuration for React Frontend
- * 
+ *
  * Initializes SuperTokens with EmailPassword authentication
  * and session management
  */
@@ -12,12 +12,19 @@ SuperTokens.init({
   appInfo: {
     appName: "Prono",
     apiDomain: import.meta.env.VITE_API_DOMAIN || "http://localhost:3000",
-    websiteDomain: import.meta.env.VITE_WEBSITE_DOMAIN || "http://localhost:5173",
+    websiteDomain:
+      import.meta.env.VITE_WEBSITE_DOMAIN || "http://localhost:5173",
     apiBasePath: "/auth",
     websiteBasePath: "/auth",
   },
   recipeList: [
     EmailPassword.init({
+      // Override to use local SuperTokens core directly
+      override: {
+        functions: (originalImplementation) => {
+          return originalImplementation;
+        },
+      },
       // Optional: customize sign in/up form styles
       style: `
         [data-supertokens~=container] {

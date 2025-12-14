@@ -32,9 +32,10 @@ packages/
 - **Dependency Rule**: Dependencies point inward (handlers → usecases → domain)
 - **Infrastructure Isolation**: Auth, DB, external services in `infra/`
 
-### General instructions
-- Update this claude.md file when core changes are made
-- When reading environment variable, use config file that will load the variable or use default value working for local developement if the env variable is not present.
+### General Instructions
+
+* **Documentation:** Update this `claude.md` file whenever core changes occur.
+* **Environment Variables:** Always use the global configuration file at the root (it handles defaults for local development). **Never** access `process.env` directly.
 
 ## WHY
 

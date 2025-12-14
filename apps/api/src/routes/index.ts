@@ -12,8 +12,8 @@ export const createRoutes = () => {
   // Mount health routes at root level
   app.route("/", healthRoutes);
 
-  // Mount auth routes under /auth prefix
-  app.route("/auth", authRoutes);
+  // Mount auth routes at root level (SuperTokens handles /auth/* paths)
+  app.route("/", authRoutes);
 
   // Mount greeting routes under /api prefix
   const api = new OpenAPIHono();

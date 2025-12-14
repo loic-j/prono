@@ -12,10 +12,10 @@ export function initSuperTokens() {
   supertokens.init({
     framework: "custom", // We're using Hono, not Express
     supertokens: {
-      // Using SuperTokens managed service (free tier)
-      // You can self-host later by changing this to your own core URL
+      // Using local SuperTokens core for development
+      // For production, use SuperTokens managed service or self-hosted
       connectionURI:
-        process.env.SUPERTOKENS_CONNECTION_URI || "https://try.supertokens.com",
+        process.env.SUPERTOKENS_CONNECTION_URI || "http://localhost:3567",
       apiKey: process.env.SUPERTOKENS_API_KEY,
     },
     appInfo: {

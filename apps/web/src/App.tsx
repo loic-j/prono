@@ -14,10 +14,10 @@ function App() {
   const [protectedMessage, setProtectedMessage] = useState<string>("");
   const [protectedLoading, setProtectedLoading] = useState(false);
   const [error, setError] = useState<string>("");
-  
+
   // Get session context to check if user is logged in
   const session = useSessionContext();
-  
+
   const isLoggedIn = !session.loading && session.doesSessionExist !== false;
 
   const fetchHello = async () => {
@@ -54,16 +54,16 @@ function App() {
       const res = await fetch("/api/hello/me", {
         credentials: "include", // Important: include cookies for session
       });
-      
+
       if (res.status === 401) {
         setError("Not authenticated. Please log in.");
         return;
       }
-      
+
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
       }
-      
+
       const data: HelloResponse = await res.json();
       setProtectedMessage(data.message);
     } catch (error) {
@@ -199,7 +199,13 @@ function App() {
           <p style={{ color: "#dc3545", marginBottom: "1rem" }}>{error}</p>
         )}
         {protectedMessage && (
-          <p style={{ fontSize: "1.5rem", color: "#007acc", marginBottom: "1rem" }}>
+          <p
+            style={{
+              fontSize: "1.5rem",
+              color: "#007acc",
+              marginBottom: "1rem",
+            }}
+          >
             {protectedMessage}
           </p>
         )}

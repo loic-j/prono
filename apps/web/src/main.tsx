@@ -14,12 +14,10 @@ function AppWithAuth() {
     return <div>{getRoutingComponent([EmailPasswordPreBuiltUI])}</div>;
   }
 
-  // Otherwise, show our app with session management
+  // Otherwise, show our app (session is optional, not required)
   return (
     <SuperTokensWrapper>
-      <SessionAuth>
-        <App />
-      </SessionAuth>
+      <App />
     </SuperTokensWrapper>
   );
 }

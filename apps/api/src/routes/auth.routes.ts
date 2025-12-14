@@ -1,11 +1,5 @@
 import { Hono } from "hono";
 import { middleware } from "supertokens-node/framework/custom";
-import { verifySession } from "supertokens-node/recipe/session/framework/custom";
-import {
-  getCurrentUserHandler,
-  signOutHandler,
-} from "../handlers/auth.handler";
-import Session from "supertokens-node/recipe/session";
 
 /**
  * Authentication routes
@@ -18,8 +12,19 @@ import Session from "supertokens-node/recipe/session";
  */
 export const authRoutes = new Hono();
 
-// SuperTokens middleware to handle auth requests
-authRoutes.all("*", async (c, next) => {
+// SuperTokens middleware to handle all auth requests
+authRoutes.all("/auth/*", async (c) => {
+  console.log(`[AUTH] Handling ${c.req.method} ${new URL(c.req.url).pathname}`);
+
+  let responseSent = false;
+  let statusCode = 200;
+  const responseHeaders: Record<string, string> = {};
+  let responseContent: any = null;
+  let responseType: "json" | "html" = "json";
+
+  // Cache request body since it can only be read once
+  let cachedBody: any = null;
+
   const baseRequest = {
     getMethod: () => c.req.method,
     getQuery: () => {
@@ -31,9 +36,14 @@ authRoutes.all("*", async (c, next) => {
       return query;
     },
     getJSONBody: async () => {
+      if (cachedBody !== null) return cachedBody;
       try {
-        return await c.req.json();
-      } catch {
+        const text = await c.req.text();
+        cachedBody = text ? JSON.parse(text) : {};
+        console.log(`[AUTH] Parsed JSON body:`, cachedBody);
+        return cachedBody;
+      } catch (e) {
+        console.error(`[AUTH] Error parsing body:`, e);
         return {};
       }
     },
@@ -60,75 +70,58 @@ authRoutes.all("*", async (c, next) => {
         .find((c) => c.trim().startsWith(key + "="));
       return cookie ? cookie.split("=")[1] : undefined;
     },
-    setHeaderValue: (key: string, value: string) => {
-      c.header(key, value);
-    },
-    setCookie: (
-      key: string,
-      value: string,
-      expires: number,
-      path: string,
-      domain: string,
-      secure: boolean,
-      httpOnly: boolean,
-      sameSite: string
-    ) => {
-      let cookie = `${key}=${value}; Path=${path}`;
-      if (expires) cookie += `; Expires=${new Date(expires).toUTCString()}`;
-      if (domain) cookie += `; Domain=${domain}`;
-      if (secure) cookie += "; Secure";
-      if (httpOnly) cookie += "; HttpOnly";
-      if (sameSite) cookie += `; SameSite=${sameSite}`;
-      c.header("Set-Cookie", cookie);
-    },
   };
 
   const baseResponse = {
     setHeaderValue: (key: string, value: string) => {
-      c.header(key, value);
+      responseHeaders[key] = value;
     },
     sendHTMLResponse: (html: string) => {
-      return c.html(html);
+      responseSent = true;
+      responseContent = html;
+      responseType = "html";
     },
-    setStatusCode: (statusCode: number) => {
-      c.status(statusCode as any);
+    setStatusCode: (code: number) => {
+      statusCode = code;
     },
     sendJSONResponse: (json: any) => {
-      return c.json(json);
+      responseSent = true;
+      responseContent = json;
+      responseType = "json";
     },
   };
 
   try {
+    console.log(`[AUTH] Calling SuperTokens middleware...`);
     await middleware()(baseRequest as any, baseResponse as any);
+    console.log(`[AUTH] Middleware returned, responseSent: ${responseSent}`);
 
-    // If SuperTokens didn't handle the request, continue
-    if (!c.res.headers.get("content-type")) {
-      await next();
+    if (responseSent) {
+      // Apply headers
+      Object.entries(responseHeaders).forEach(([key, value]) => {
+        c.header(key, value);
+      });
+
+      // Set status
+      c.status(statusCode as any);
+
+      console.log(
+        `[AUTH] Sending ${responseType} response with status ${statusCode}`
+      );
+
+      // Send response
+      if (responseType === "html") {
+        return c.html(responseContent);
+      } else {
+        return c.json(responseContent);
+      }
     }
+
+    // If SuperTokens didn't handle it, return 404
+    console.log(`[AUTH] SuperTokens didn't handle the request`);
+    return c.json({ error: "Not found" }, 404);
   } catch (error) {
     console.error("SuperTokens middleware error:", error);
-    await next();
-  }
-});
-
-// Custom endpoint: Get current user
-authRoutes.get("/user", async (c) => {
-  try {
-    const session = await Session.getSession(c.req.raw, c.res as any);
-    (c as any).set("session", session);
-    return getCurrentUserHandler(c);
-  } catch (error: any) {
-    return c.json({ error: "Not authenticated" }, 401);
-  }
-});
-
-// Custom endpoint: Sign out
-authRoutes.post("/signout", async (c) => {
-  try {
-    const session = await Session.getSession(c.req.raw, c.res as any);
-    (c as any).set("session", session);
-    return signOutHandler(c);
-  } catch (error: any) {
-    return c.json({ error: "Not authenticated" }, 401);
+    return c.json({ error: "Internal server error" }, 500);
   }
 });
