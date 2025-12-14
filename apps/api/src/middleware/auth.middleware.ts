@@ -1,13 +1,18 @@
 import { Context, Next } from "hono";
 import { getSession } from "supertokens-node/recipe/session";
+import { authService } from "../infra/supertokens";
+import { AuthenticatedContext } from "../types/context.types";
 
 /**
  * Authentication middleware
  *
  * Verifies that the user has a valid session
- * Attaches the session and user to the context
+ * Attaches the session, userId, and full user object to the context
  */
-export const authMiddleware = async (c: Context, next: Next) => {
+export const authMiddleware = async (
+  c: Context<{ Variables: AuthenticatedContext }>,
+  next: Next
+) => {
   try {
     // Create a compatible request object for SuperTokens
     const request = {
@@ -55,8 +60,20 @@ export const authMiddleware = async (c: Context, next: Next) => {
     const session = await getSession(request as any, response as any, {
       sessionRequired: true,
     });
+
+    const userId = session.getUserId();
+
+    // Fetch full user information
+    const user = await authService.getUserById(userId);
+
+    if (!user) {
+      return c.json({ error: "User not found" }, 404);
+    }
+
+    // Set all authenticated context variables with type safety
     c.set("session", session);
-    c.set("userId", session.getUserId());
+    c.set("userId", userId);
+    c.set("user", user);
 
     await next();
   } catch (error: any) {
@@ -75,7 +92,10 @@ export const authMiddleware = async (c: Context, next: Next) => {
  * Verifies session if present, but doesn't require it
  * Useful for endpoints that have different behavior for authenticated vs unauthenticated users
  */
-export const optionalAuthMiddleware = async (c: Context, next: Next) => {
+export const optionalAuthMiddleware = async (
+  c: Context<{ Variables: AuthenticatedContext }>,
+  next: Next
+) => {
   try {
     const request = {
       getHeaderValue: (key: string) => c.req.header(key.toLowerCase()),
@@ -118,9 +138,16 @@ export const optionalAuthMiddleware = async (c: Context, next: Next) => {
     const session = await getSession(request as any, response as any, {
       sessionRequired: false,
     });
+
     if (session) {
-      c.set("session", session);
-      c.set("userId", session.getUserId());
+      const userId = session.getUserId();
+      const user = await authService.getUserById(userId);
+
+      if (user) {
+        c.set("session", session);
+        c.set("userId", userId);
+        c.set("user", user);
+      }
     }
   } catch (error) {
     // Silently fail for optional auth

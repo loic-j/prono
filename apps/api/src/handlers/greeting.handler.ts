@@ -1,6 +1,7 @@
 import { HelloResponseSchema, HelloNameParamSchema } from "@prono/types";
 import { z } from "zod";
-import { authService } from "../infra/supertokens";
+import { Context } from "hono";
+import { AuthenticatedContext } from "../types/context.types";
 
 type HelloResponse = z.infer<typeof HelloResponseSchema>;
 type HelloNameParam = z.infer<typeof HelloNameParamSchema>;
@@ -25,23 +26,18 @@ export const helloHandler = (c: any) => {
  * This endpoint is protected and requires authentication
  * It will greet the user with their display name from their profile
  */
-export const helloNameHandler = async (c: any) => {
+export const helloNameHandler = async (
+  c: Context<{ Variables: AuthenticatedContext }>
+) => {
   try {
-    // Get the user ID from the session (set by authMiddleware)
-    const userId = c.get("userId");
+    // Get the user object from context (set by authMiddleware)
+    const user = c.get("user");
 
-    if (!userId) {
+    if (!user) {
       return c.json({ error: "Not authenticated" }, 401);
     }
 
-    // Get user information from the auth service
-    const user = await authService.getUserById(userId);
-
-    if (!user) {
-      return c.json({ error: "User not found" }, 404);
-    }
-
-    // Use the user's display name instead of the path parameter
+    // Use the user's display name directly from the context
     const displayName = user.getDisplayName();
 
     const response: HelloResponse = {
