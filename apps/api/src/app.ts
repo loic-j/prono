@@ -2,12 +2,27 @@ import { OpenAPIHono } from "@hono/zod-openapi";
 import { apiReference } from "@scalar/hono-api-reference";
 import { cors } from "hono/cors";
 import { createRoutes } from "./routes";
+import { initSuperTokens } from "./infra/supertokens";
+
+// Initialize SuperTokens
+initSuperTokens();
 
 // Create OpenAPI-enabled app with proper typing
 const app = new OpenAPIHono();
 
-// Add CORS middleware
-app.use("*", cors());
+// Add CORS middleware - must be configured for SuperTokens
+app.use(
+  "*",
+  cors({
+    origin: [process.env.WEBSITE_DOMAIN || "http://localhost:5173"],
+    credentials: true,
+    allowHeaders: ["content-type", ...supertokens.getAllCORSHeaders()],
+    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  })
+);
+
+// Import supertokens for CORS headers
+import supertokens from "supertokens-node";
 
 // ============================================================================
 // Routes
