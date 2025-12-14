@@ -1,0 +1,2 @@
+- refactor code to use global config instead of directly accessing process.env variables
+- add errors for each layers
