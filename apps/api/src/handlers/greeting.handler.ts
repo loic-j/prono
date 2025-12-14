@@ -1,10 +1,9 @@
-import { HelloResponseSchema, HelloNameParamSchema } from "@prono/types";
+import { HelloResponseSchema } from "@prono/types";
 import { z } from "zod";
 import { Context } from "hono";
 import { AuthenticatedContext } from "../types/context.types";
 
 type HelloResponse = z.infer<typeof HelloResponseSchema>;
-type HelloNameParam = z.infer<typeof HelloNameParamSchema>;
 
 /**
  * Simple hello world handler

@@ -33,22 +33,6 @@ export const HelloResponseSchema = z.object({
 
 export type HelloResponse = z.infer<typeof HelloResponseSchema>;
 
-export const HelloNameParamSchema = z.object({
-  name: z
-    .string()
-    .min(1)
-    .max(100)
-    .openapi({
-      param: {
-        name: "name",
-        in: "path",
-      },
-      example: "John",
-    }),
-});
-
-export type HelloNameParam = z.infer<typeof HelloNameParamSchema>;
-
 // ============================================================================
 // Error Schemas
 // ============================================================================
@@ -73,6 +57,5 @@ export type ErrorResponse = z.infer<typeof ErrorResponseSchema>;
 export const schemas = {
   HealthResponseSchema,
   HelloResponseSchema,
-  HelloNameParamSchema,
   ErrorResponseSchema,
 };
