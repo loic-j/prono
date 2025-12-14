@@ -17,21 +17,5 @@ SuperTokens.init({
     apiBasePath: "/auth",
     websiteBasePath: "/auth",
   },
-  recipeList: [
-    EmailPassword.init({
-      // Override to use local SuperTokens core directly
-      override: {
-        functions: (originalImplementation) => {
-          return originalImplementation;
-        },
-      },
-      // Optional: customize sign in/up form styles
-      style: `
-        [data-supertokens~=container] {
-          font-family: system-ui;
-        }
-      `,
-    }),
-    Session.init(),
-  ],
+  recipeList: [EmailPassword.init(), Session.init()],
 });

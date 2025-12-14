@@ -1,5 +1,6 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
 import { SuperTokensWrapper } from "supertokens-auth-react";
 import { SessionAuth } from "supertokens-auth-react/recipe/session";
 import { getRoutingComponent, canHandleRoute } from "supertokens-auth-react/ui";
@@ -17,7 +18,9 @@ function AppWithAuth() {
   // Otherwise, show our app (session is optional, not required)
   return (
     <SuperTokensWrapper>
-      <App />
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
     </SuperTokensWrapper>
   );
 }

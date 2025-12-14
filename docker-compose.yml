@@ -1,78 +1,42 @@
 version: "3.8"
 
 services:
-  api:
-    build:
-      context: .
-      dockerfile: apps/api/Dockerfile
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=production
-      - PORT=3000
-      # Uncomment when you add a database
-      # - DATABASE_URL=${DATABASE_URL}
-    # depends_on:
-    #   - db
-    restart: unless-stopped
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "node",
-          "-e",
-          "fetch('http://localhost:3000/health').then(r => r.ok ? process.exit(0) : process.exit(1))",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  web:
-    build:
-      context: .
-      dockerfile: apps/web/Dockerfile
-    ports:
-      - "80:80"
-    depends_on:
-      - api
-    restart: unless-stopped
-
   db:
-    image: postgres:16-alpine
+    image: "postgres:latest"
     environment:
-      - POSTGRES_USER=prono
-      - POSTGRES_PASSWORD=prono
-      - POSTGRES_DB=prono
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+      POSTGRES_USER: supertokens_user
+      POSTGRES_PASSWORD: somePassword
+      POSTGRES_DB: supertokens
     ports:
-      - "5432:5432"
+      - 5432:5432
+    networks:
+      - app_network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U prono"]
-      interval: 10s
+      test: ["CMD", "pg_isready", "-U", "supertokens_user", "-d", "supertokens"]
+      interval: 5s
       timeout: 5s
       retries: 5
 
-  # SuperTokens Core (for local development)
   supertokens:
-    image: registry.supertokens.io/supertokens/supertokens-postgresql:9.2
-    environment:
-      POSTGRESQL_HOST: db
-      POSTGRESQL_PORT: 5432
-      POSTGRESQL_DATABASE_NAME: prono
-      POSTGRESQL_USER: prono
-      POSTGRESQL_PASSWORD: prono
-    ports:
-      - "3567:3567"
-    restart: unless-stopped
+    image: registry.supertokens.io/supertokens/supertokens-postgresql:latest
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    ports:
+      - 3567:3567
+    environment:
+      POSTGRESQL_CONNECTION_URI: "postgresql://supertokens_user:somePassword@db:5432/supertokens"
+    networks:
+      - app_network
+    restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3567/hello"]
+      test: >
+        bash -c 'exec 3<>/dev/tcp/127.0.0.1/3567 && echo -e "GET /hello HTTP/1.1\r\nhost: 127.0.0.1:3567\r\nConnection: close\r\n\r\n" >&3 && cat <&3 | grep "Hello"'
       interval: 10s
       timeout: 5s
       retries: 5
 
-volumes:
-  postgres_data:
+networks:
+  app_network:
+    driver: bridge
