@@ -1,5 +1,6 @@
 import { Context } from "hono";
 import { authService } from "../infra/supertokens";
+import { logger } from "../utils/logger";
 
 /**
  * Get current user handler
@@ -30,7 +31,7 @@ export const getCurrentUserHandler = async (c: any) => {
       200
     );
   } catch (error) {
-    console.error("Error getting current user:", error);
+    logger.error({ error }, "Error getting current user");
     return c.json({ error: "Internal server error" }, 500);
   }
 };
@@ -56,7 +57,7 @@ export const signOutHandler = async (c: any) => {
       200
     );
   } catch (error) {
-    console.error("Error signing out:", error);
+    logger.error({ error }, "Error signing out");
     return c.json({ error: "Internal server error" }, 500);
   }
 };

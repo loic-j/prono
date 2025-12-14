@@ -2,6 +2,7 @@ import { HelloResponseSchema } from "@prono/types";
 import { z } from "zod";
 import { Context } from "hono";
 import { AuthenticatedContext } from "../types/context.types";
+import { logger, withLogging } from "../utils/logger";
 
 type HelloResponse = z.infer<typeof HelloResponseSchema>;
 
@@ -52,7 +53,7 @@ export const helloNameHandler = async (
 
     return c.json(response, 200);
   } catch (error) {
-    console.error("Error in helloNameHandler:", error);
+    logger.error({ error }, "Error in helloNameHandler");
     return c.json(
       {
         error: "Internal server error",

@@ -3,6 +3,10 @@ import { apiReference } from "@scalar/hono-api-reference";
 import { cors } from "hono/cors";
 import { createRoutes } from "./routes";
 import { initSuperTokens } from "./infra/supertokens";
+import {
+  loggingMiddleware,
+  errorLoggingMiddleware,
+} from "./middleware/logging.middleware";
 
 // Initialize SuperTokens
 initSuperTokens();
@@ -10,23 +14,27 @@ initSuperTokens();
 // Create OpenAPI-enabled app with proper typing
 const app = new OpenAPIHono();
 
+// Add logging middleware with OpenTelemetry trace propagation
+app.use("*", loggingMiddleware);
+
 // Add CORS middleware - must be configured for SuperTokens
 app.use(
   "*",
   cors({
     origin: [process.env.WEBSITE_DOMAIN || "http://localhost:5173"],
     credentials: true,
-    allowHeaders: ["content-type", ...supertokens.getAllCORSHeaders()],
+    allowHeaders: [
+      "content-type",
+      "traceparent",
+      "tracestate",
+      ...supertokens.getAllCORSHeaders(),
+    ],
     allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   })
 );
 
-// Add request logging middleware
-app.use("*", async (c, next) => {
-  console.log(`[SERVER] ${c.req.method} ${c.req.url}`);
-  await next();
-  console.log(`[SERVER] Response status: ${c.res.status}`);
-});
+// Add error handling middleware
+app.onError(errorLoggingMiddleware);
 
 // Import supertokens for CORS headers
 import supertokens from "supertokens-node";
