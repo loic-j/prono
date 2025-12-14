@@ -1,7 +1,6 @@
 import { Context, Next } from "hono";
 import { getSession } from "supertokens-node/recipe/session";
-import { authService } from "../infra/supertokens";
-import { AuthenticatedContext } from "../types/context.types";
+import { AppContext } from "../types/context.types";
 import {
   InvalidSessionError,
   SessionRefreshRequiredError,
@@ -16,10 +15,7 @@ import {
  * Attaches the session, userId, and full user object to the context
  * Throws errors instead of returning responses - let Hono's error handler deal with them
  */
-export const authMiddleware = async (
-  c: Context<{ Variables: AuthenticatedContext }>,
-  next: Next
-) => {
+export const authMiddleware = async (c: Context<AppContext>, next: Next) => {
   // Create a compatible request object for SuperTokens
   const request = {
     getHeaderValue: (key: string) => c.req.header(key.toLowerCase()),
@@ -70,8 +66,9 @@ export const authMiddleware = async (
 
     const userId = session.getUserId();
 
-    // Fetch full user information
-    const user = await authService.getUserById(userId);
+    // Get auth service from DI container
+    const container = c.get("container");
+    const user = await container.infra.authService.getUserById(userId);
 
     if (!user) {
       throw new UserNotFoundError(userId, "Authenticated user not found");
@@ -114,7 +111,7 @@ export const authMiddleware = async (
  * Useful for endpoints that have different behavior for authenticated vs unauthenticated users
  */
 export const optionalAuthMiddleware = async (
-  c: Context<{ Variables: AuthenticatedContext }>,
+  c: Context<AppContext>,
   next: Next
 ) => {
   try {
@@ -162,7 +159,10 @@ export const optionalAuthMiddleware = async (
 
     if (session) {
       const userId = session.getUserId();
-      const user = await authService.getUserById(userId);
+
+      // Get auth service from DI container
+      const container = c.get("container");
+      const user = await container.infra.authService.getUserById(userId);
 
       if (user) {
         c.set("session", session);

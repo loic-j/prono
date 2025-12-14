@@ -10,12 +10,16 @@ import {
   ConflictError,
   NotFoundError,
 } from "../domain/errors";
+import { IUserRepository, IEmailService } from "../domain";
 
 /**
  * Example: User registration use case
  */
 export class RegisterUserUseCase {
-  constructor(private userRepository: any, private emailService: any) {}
+  constructor(
+    private userRepository: IUserRepository,
+    private emailService: IEmailService
+  ) {}
 
   async execute(email: string, password: string) {
     // Validation - throw ValidationError
@@ -41,8 +45,13 @@ export class RegisterUserUseCase {
     // Create user
     const user = await this.userRepository.create({ email, password });
 
-    // Send verification email (infrastructure layer might throw ExternalServiceError)
-    await this.emailService.sendVerificationEmail(user.email);
+    // Send verification email with a temporary token
+    // In production, generate a proper verification token
+    const verificationToken = `verify_${user.id}_${Date.now()}`;
+    await this.emailService.sendVerificationEmail(
+      user.email,
+      verificationToken
+    );
 
     return user;
   }
@@ -56,7 +65,7 @@ export class RegisterUserUseCase {
  * Example: Update user profile use case
  */
 export class UpdateUserProfileUseCase {
-  constructor(private userRepository: any) {}
+  constructor(private userRepository: IUserRepository) {}
 
   async execute(userId: string, updates: { displayName?: string }) {
     // Check if user exists
@@ -84,28 +93,3 @@ export class UpdateUserProfileUseCase {
     return updatedUser;
   }
 }
-
-/**
- * Example: Handler using the use case
- */
-export const registerUserHandler = async (c: any) => {
-  // Parse and validate request body
-  const { email, password } = await c.req.json();
-
-  // Execute use case - let errors bubble up to Hono error handler
-  const useCase = new RegisterUserUseCase(
-    c.get("userRepository"),
-    c.get("emailService")
-  );
-
-  const user = await useCase.execute(email, password);
-
-  return c.json(
-    {
-      id: user.id,
-      email: user.email,
-      message: "User registered successfully",
-    },
-    201
-  );
-};

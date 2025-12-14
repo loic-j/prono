@@ -1,5 +1,6 @@
 import { User } from "../domain/user.entity";
 import { SessionContainer } from "supertokens-node/recipe/session";
+import { Container } from "../container";
 
 /**
  * Authenticated context variables
@@ -12,9 +13,11 @@ export interface AuthenticatedContext {
 }
 
 /**
- * Hono context with authentication
- * Use this type to access authenticated user information in handlers
+ * Hono context with authentication and DI container
+ * Use this type to access authenticated user information and dependencies in handlers
  */
 export type AppContext = {
-  Variables: Partial<AuthenticatedContext>;
+  Variables: Partial<AuthenticatedContext> & {
+    container: Container;
+  };
 };

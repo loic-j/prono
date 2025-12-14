@@ -1,5 +1,4 @@
 import { Context } from "hono";
-import { authService } from "../infra/supertokens";
 import { logger } from "../utils/logger";
 import {
   InvalidSessionError,
@@ -13,12 +12,15 @@ import {
  */
 export const getCurrentUserHandler = async (c: any) => {
   const session = c.get("session");
+  const container = c.get("container");
 
   if (!session) {
     throw new InvalidSessionError("Not authenticated");
   }
 
-  const user = await authService.getUserById(session.getUserId());
+  const user = await container.infra.authService.getUserById(
+    session.getUserId()
+  );
 
   if (!user) {
     throw new UserNotFoundError(
