@@ -1,5 +1,11 @@
 import { Hono, Context } from "hono";
-import { middleware } from "supertokens-node/framework/custom";
+import {
+  CollectingResponse,
+  PreParsedRequest,
+  middleware as customMiddleware,
+} from "supertokens-node/framework/custom";
+import { HTTPMethod } from "supertokens-node/types";
+import { serialize } from "cookie";
 
 /**
  * Authentication routes
@@ -12,120 +18,83 @@ import { middleware } from "supertokens-node/framework/custom";
  */
 export const authRoutes = new Hono();
 
-// Shared handler for SuperTokens middleware
-const handleSupertokensRequest = async (c: Context) => {
-  console.log(`[AUTH] Handling ${c.req.method} ${new URL(c.req.url).pathname}`);
+function setCookiesInHeaders(
+  headers: Headers,
+  cookies: CollectingResponse["cookies"]
+) {
+  for (const cookie of cookies) {
+    headers.append(
+      "Set-Cookie",
+      serialize(cookie.key, cookie.value, {
+        domain: cookie.domain,
+        expires: new Date(cookie.expires),
+        httpOnly: cookie.httpOnly,
+        path: cookie.path,
+        sameSite: cookie.sameSite as "strict" | "lax" | "none" | undefined,
+        secure: cookie.secure,
+      })
+    );
+  }
+}
 
-  let responseSent = false;
-  let statusCode = 200;
-  const responseHeaders: Record<string, string> = {};
-  let responseContent: any = null;
-  let responseType: string = "json";
+function copyHeaders(source: Headers, destination: Headers): void {
+  for (const [key, value] of source.entries()) {
+    destination.append(key, value);
+  }
+}
 
-  // Cache request body since it can only be read once
-  let cachedBody: any = null;
+export const middleware = () => {
+  return async function (c: Context) {
+    console.log(`[AUTH] Incoming request: ${c.req.method} ${c.req.url}`);
+    console.log(`[AUTH] Path: ${new URL(c.req.url).pathname}`);
 
-  const baseRequest = {
-    getMethod: () => c.req.method,
-    getQuery: () => {
-      const url = new URL(c.req.url);
-      const query: Record<string, string> = {};
-      url.searchParams.forEach((value: string, key: string) => {
-        query[key] = value;
+    // Parse cookies from cookie header
+    const cookieHeader = c.req.header("cookie") || "";
+    const cookies: Record<string, string> = {};
+    if (cookieHeader) {
+      cookieHeader.split(";").forEach((cookie) => {
+        const [key, value] = cookie.trim().split("=");
+        if (key && value) {
+          cookies[key] = value;
+        }
       });
-      return query;
-    },
-    getJSONBody: async () => {
-      if (cachedBody !== null) return cachedBody;
-      try {
-        const text = await c.req.text();
-        cachedBody = text ? JSON.parse(text) : {};
-        console.log(`[AUTH] Parsed JSON body:`, cachedBody);
-        return cachedBody;
-      } catch (e) {
-        console.error(`[AUTH] Error parsing body:`, e);
-        return {};
-      }
-    },
-    getFormData: async () => {
-      try {
-        const formData: FormData = await c.req.formData();
-        const data: Record<string, string> = {};
-        formData.forEach((value: string | File, key: string) => {
-          data[key] = typeof value === "string" ? value : value.name;
-        });
-        return data;
-      } catch {
-        return {};
-      }
-    },
-    getHeaderValue: (key: string) => c.req.header(key) || undefined,
-    getOriginalURL: () => c.req.url,
-    getPath: () => new URL(c.req.url).pathname,
-    getCookieValue: (key: string) => {
-      const cookies = c.req.header("cookie");
-      if (!cookies) return undefined;
-      const cookie = cookies
-        .split(";")
-        .find((cookieStr: string) => cookieStr.trim().startsWith(key + "="));
-      return cookie ? cookie.split("=")[1] : undefined;
-    },
-  };
-
-  const baseResponse = {
-    setHeaderValue: (key: string, value: string) => {
-      responseHeaders[key] = value;
-    },
-    sendHTMLResponse: (html: string) => {
-      responseSent = true;
-      responseContent = html;
-      responseType = "html";
-    },
-    setStatusCode: (code: number) => {
-      statusCode = code;
-    },
-    sendJSONResponse: (json: any) => {
-      responseSent = true;
-      responseContent = json;
-      responseType = "json";
-    },
-  };
-
-  try {
-    console.log(`[AUTH] Calling SuperTokens middleware...`);
-    await middleware()(baseRequest as any, baseResponse as any);
-    console.log(`[AUTH] Middleware returned, responseSent: ${responseSent}`);
-
-    if (responseSent) {
-      // Apply headers
-      Object.entries(responseHeaders).forEach(([key, value]) => {
-        c.header(key, value);
-      });
-
-      // Set status
-      c.status(statusCode as any);
-
-      console.log(
-        `[AUTH] Sending ${responseType} response with status ${statusCode}`
-      );
-
-      // Send response
-      if (responseType === "html") {
-        return c.html(responseContent);
-      } else {
-        return c.json(responseContent);
-      }
     }
 
-    // If SuperTokens didn't handle it, return 404
-    console.log(`[AUTH] SuperTokens didn't handle the request`);
+    const request = new PreParsedRequest({
+      method: c.req.method as HTTPMethod,
+      url: c.req.url,
+      query: Object.fromEntries(new URL(c.req.url).searchParams.entries()),
+      cookies,
+      headers: c.req.raw.headers as Headers,
+      getFormBody: () => c.req.formData(),
+      getJSONBody: () => c.req.json(),
+    });
+    const baseResponse = new CollectingResponse();
+
+    const stMiddleware = customMiddleware(() => request);
+
+    const { handled, error } = await stMiddleware(request, baseResponse);
+
+    if (error) {
+      console.error("[AUTH] SuperTokens middleware error:", error);
+      throw error;
+    }
+
+    if (handled) {
+      console.log(`[AUTH] Request handled, status: ${baseResponse.statusCode}`);
+      setCookiesInHeaders(baseResponse.headers, baseResponse.cookies);
+      return new Response(baseResponse.body, {
+        status: baseResponse.statusCode,
+        headers: baseResponse.headers,
+      });
+    }
+
+    console.log("[AUTH] Request not handled by SuperTokens, returning 404");
     return c.json({ error: "Not found" }, 404);
-  } catch (error) {
-    console.error("SuperTokens middleware error:", error);
-    return c.json({ error: "Internal server error" }, 500);
-  }
+  };
 };
 
-// Handle both /api/auth and /api/auth/* to catch all authentication endpoints
-authRoutes.all("/api/auth", handleSupertokensRequest);
-authRoutes.all("/api/auth/*", handleSupertokensRequest);
+// Handle both /auth and /auth/* to catch all authentication endpoints
+// Note: These routes are mounted under /api prefix in index.ts, resulting in /api/auth/*
+authRoutes.all("/auth", middleware());
+authRoutes.all("/auth/*", middleware());

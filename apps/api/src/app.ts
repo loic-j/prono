@@ -21,6 +21,13 @@ app.use(
   })
 );
 
+// Add request logging middleware
+app.use("*", async (c, next) => {
+  console.log(`[SERVER] ${c.req.method} ${c.req.url}`);
+  await next();
+  console.log(`[SERVER] Response status: ${c.res.status}`);
+});
+
 // Import supertokens for CORS headers
 import supertokens from "supertokens-node";
 
