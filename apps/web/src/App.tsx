@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
-import { hc } from "hono/client";
-import type { AppType } from "../../api/src/app";
+import type { HelloResponse } from "@prono/types";
 
-// Create Hono RPC client with type safety
-const client = hc<AppType>("/api");
+// Note: With OpenAPIHono, we use standard fetch instead of hono/client RPC
+// The OpenAPI spec provides all the type information we need
 
 function App() {
   const [message, setMessage] = useState<string>("");
@@ -13,8 +12,8 @@ function App() {
   const fetchHello = async () => {
     setLoading(true);
     try {
-      const res = await client.hello.$get();
-      const data = await res.json();
+      const res = await fetch("/api/hello");
+      const data: HelloResponse = await res.json();
       setMessage(data.message);
     } catch (error) {
       console.error("Error fetching:", error);
@@ -26,10 +25,8 @@ function App() {
   const fetchHelloWithName = async () => {
     setLoading(true);
     try {
-      const res = await client.hello[":name"].$get({
-        param: { name },
-      });
-      const data = await res.json();
+      const res = await fetch(`/api/hello/${encodeURIComponent(name)}`);
+      const data: HelloResponse = await res.json();
       setMessage(data.message);
     } catch (error) {
       console.error("Error fetching:", error);

@@ -6,9 +6,5 @@ export interface User {
   createdAt: Date;
 }
 
-export interface HelloResponse {
-  message: string;
-  timestamp: string;
-}
-
-// Add more shared types as needed
+// Export all OpenAPI schemas and types
+export * from "./schemas";

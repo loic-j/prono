@@ -11,6 +11,7 @@
         "lint": "echo 'Lint not configured yet'"
     },
     "dependencies": {
+        "@prono/types": "workspace:*",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
         "hono": "^4.0.0"
