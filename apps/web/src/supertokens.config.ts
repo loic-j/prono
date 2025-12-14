@@ -11,10 +11,10 @@ import Session from "supertokens-auth-react/recipe/session";
 SuperTokens.init({
   appInfo: {
     appName: "Prono",
-    apiDomain: import.meta.env.VITE_API_DOMAIN || "http://localhost:3000",
+    apiDomain: import.meta.env.VITE_API_DOMAIN || "http://localhost:5173",
     websiteDomain:
       import.meta.env.VITE_WEBSITE_DOMAIN || "http://localhost:5173",
-    apiBasePath: "/auth",
+    apiBasePath: "/api/auth",
     websiteBasePath: "/auth",
   },
   recipeList: [EmailPassword.init(), Session.init()],

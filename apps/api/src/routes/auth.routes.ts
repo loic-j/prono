@@ -126,6 +126,6 @@ const handleSupertokensRequest = async (c: Context) => {
   }
 };
 
-// Handle both /auth and /auth/* to catch all authentication endpoints
-authRoutes.all("/auth", handleSupertokensRequest);
-authRoutes.all("/auth/*", handleSupertokensRequest);
+// Handle both /api/auth and /api/auth/* to catch all authentication endpoints
+authRoutes.all("/api/auth", handleSupertokensRequest);
+authRoutes.all("/api/auth/*", handleSupertokensRequest);
