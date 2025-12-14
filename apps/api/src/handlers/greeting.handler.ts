@@ -27,14 +27,20 @@ export const helloHandler = (c: any) => {
  * It will greet the user with their display name from their profile
  */
 export const helloNameHandler = async (
-  c: Context<{ Variables: AuthenticatedContext }>
+  c: Context<{ Variables: Partial<AuthenticatedContext> }>
 ) => {
   try {
     // Get the user object from context (set by authMiddleware)
     const user = c.get("user");
 
     if (!user) {
-      return c.json({ error: "Not authenticated" }, 401);
+      return c.json(
+        {
+          error: "Not authenticated",
+          message: "User authentication is required to access this resource",
+        },
+        401
+      );
     }
 
     // Use the user's display name directly from the context
@@ -48,6 +54,12 @@ export const helloNameHandler = async (
     return c.json(response, 200);
   } catch (error) {
     console.error("Error in helloNameHandler:", error);
-    return c.json({ error: "Internal server error" }, 500);
+    return c.json(
+      {
+        error: "Internal server error",
+        message: "An unexpected error occurred while processing your request",
+      },
+      500
+    );
   }
 };

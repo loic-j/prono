@@ -1,4 +1,4 @@
-import { Hono } from "hono";
+import { Hono, Context } from "hono";
 import { middleware } from "supertokens-node/framework/custom";
 
 /**
@@ -13,14 +13,14 @@ import { middleware } from "supertokens-node/framework/custom";
 export const authRoutes = new Hono();
 
 // Shared handler for SuperTokens middleware
-const handleSupertokensRequest = async (c: any) => {
+const handleSupertokensRequest = async (c: Context) => {
   console.log(`[AUTH] Handling ${c.req.method} ${new URL(c.req.url).pathname}`);
 
   let responseSent = false;
   let statusCode = 200;
   const responseHeaders: Record<string, string> = {};
   let responseContent: any = null;
-  let responseType: "json" | "html" = "json";
+  let responseType: string = "json";
 
   // Cache request body since it can only be read once
   let cachedBody: any = null;
@@ -30,7 +30,7 @@ const handleSupertokensRequest = async (c: any) => {
     getQuery: () => {
       const url = new URL(c.req.url);
       const query: Record<string, string> = {};
-      url.searchParams.forEach((value, key) => {
+      url.searchParams.forEach((value: string, key: string) => {
         query[key] = value;
       });
       return query;
@@ -49,10 +49,10 @@ const handleSupertokensRequest = async (c: any) => {
     },
     getFormData: async () => {
       try {
-        const formData = await c.req.formData();
+        const formData: FormData = await c.req.formData();
         const data: Record<string, string> = {};
-        formData.forEach((value, key) => {
-          data[key] = value.toString();
+        formData.forEach((value: string | File, key: string) => {
+          data[key] = typeof value === "string" ? value : value.name;
         });
         return data;
       } catch {
@@ -67,7 +67,7 @@ const handleSupertokensRequest = async (c: any) => {
       if (!cookies) return undefined;
       const cookie = cookies
         .split(";")
-        .find((c) => c.trim().startsWith(key + "="));
+        .find((cookieStr: string) => cookieStr.trim().startsWith(key + "="));
       return cookie ? cookie.split("=")[1] : undefined;
     },
   };

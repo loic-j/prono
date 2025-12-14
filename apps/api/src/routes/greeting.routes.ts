@@ -2,6 +2,8 @@ import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { HelloResponseSchema, ErrorResponseSchema } from "@prono/types";
 import { helloHandler, helloNameHandler } from "../handlers/greeting.handler";
 import { authMiddleware } from "../middleware/auth.middleware";
+import { Context } from "hono";
+import { AuthenticatedContext } from "../types/context.types";
 
 /**
  * Greeting routes
@@ -63,11 +65,19 @@ const helloNameRoute = createRoute({
         },
       },
     },
+    500: {
+      description: "Internal server error",
+      content: {
+        "application/json": {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
   },
 });
 
 // Apply the handler with auth middleware inline
 greetingRoutes.openapi(helloNameRoute, async (c) => {
-  await authMiddleware(c, async () => {});
-  return helloNameHandler(c);
+  await authMiddleware(c as any, async () => {});
+  return helloNameHandler(c as any);
 });
