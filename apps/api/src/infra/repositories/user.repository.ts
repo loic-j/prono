@@ -5,6 +5,7 @@
  * In production, replace this with a proper database implementation (e.g., Prisma, TypeORM)
  */
 
+import { singleton } from "tsyringe";
 import {
   IUserRepository,
   CreateUserDto,
@@ -12,6 +13,7 @@ import {
   User,
 } from "../../domain";
 
+@singleton()
 export class InMemoryUserRepository implements IUserRepository {
   private users: Map<string, User> = new Map();
   private emailIndex: Map<string, string> = new Map(); // email -> userId mapping

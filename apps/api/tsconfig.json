@@ -6,7 +6,9 @@
     "baseUrl": "../..",
     "paths": {
       "@prono/types": ["packages/types/src/index.ts"]
-    }
+    },
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

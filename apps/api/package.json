@@ -27,7 +27,9 @@
         "hono": "^4.0.0",
         "pino": "^10.1.0",
         "pino-http": "^11.0.0",
+        "reflect-metadata": "^0.2.2",
         "supertokens-node": "^24.0.0",
+        "tsyringe": "^4.10.0",
         "zod": "^4.1.13"
     },
     "devDependencies": {

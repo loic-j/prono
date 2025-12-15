@@ -5,20 +5,24 @@
  * and let the Hono error handler deal with HTTP responses
  */
 
+import { injectable, inject } from "tsyringe";
 import {
   ValidationError,
   ConflictError,
   NotFoundError,
 } from "../domain/errors";
-import { IUserRepository, IEmailService } from "../domain";
+import type { IUserRepository, IEmailService } from "../domain";
+import { InMemoryUserRepository } from "../infra/repositories/user.repository";
+import { ConsoleEmailService } from "../infra/services/email.service";
 
 /**
  * Example: User registration use case
  */
+@injectable()
 export class RegisterUserUseCase {
   constructor(
-    private userRepository: IUserRepository,
-    private emailService: IEmailService
+    @inject(InMemoryUserRepository) private userRepository: IUserRepository,
+    @inject(ConsoleEmailService) private emailService: IEmailService
   ) {}
 
   async execute(email: string, password: string) {
@@ -64,8 +68,11 @@ export class RegisterUserUseCase {
 /**
  * Example: Update user profile use case
  */
+@injectable()
 export class UpdateUserProfileUseCase {
-  constructor(private userRepository: IUserRepository) {}
+  constructor(
+    @inject(InMemoryUserRepository) private userRepository: IUserRepository
+  ) {}
 
   async execute(userId: string, updates: { displayName?: string }) {
     // Check if user exists

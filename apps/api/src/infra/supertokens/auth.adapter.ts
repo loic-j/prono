@@ -1,3 +1,4 @@
+import { singleton } from "tsyringe";
 import { IAuthService, SessionInfo, User } from "../../domain";
 import supertokens from "supertokens-node";
 
@@ -7,6 +8,7 @@ import supertokens from "supertokens-node";
  * Implements the IAuthService interface using SuperTokens
  * This is the infrastructure layer implementation
  */
+@singleton()
 export class SuperTokensAuthService implements IAuthService {
   /**
    * Get user by ID from SuperTokens

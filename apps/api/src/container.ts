@@ -1,15 +1,16 @@
 /**
- * Dependency Injection Container
+ * Dependency Injection Container using TSyringe
  *
- * This module provides a simple DI container for managing dependencies
- * across the infrastructure and use case layers.
+ * This module configures the DI container using TSyringe decorators
+ * and provides access to the container for resolving dependencies.
  *
  * Architecture:
- * - Infrastructure services implement domain interfaces
- * - Use cases depend on domain interfaces
- * - Container wires everything together at app startup
+ * - Infrastructure services are marked with @singleton
+ * - Use cases are marked with @injectable and use @inject for dependencies
+ * - Container automatically wires everything together
  */
 
+import { container } from "tsyringe";
 import { IAuthService, IUserRepository, IEmailService } from "./domain";
 import { SuperTokensAuthService } from "./infra/supertokens/auth.adapter";
 import { InMemoryUserRepository } from "./infra/repositories/user.repository";
@@ -47,79 +48,55 @@ export interface Container {
 }
 
 /**
- * Create and initialize the DI container
- * This function is called once at application startup
+ * Initialize the DI container
+ * This function registers interface-to-implementation mappings
+ * and should be called once at application startup
  */
-export function createContainer(): Container {
-  // ============================================================================
-  // Infrastructure Layer Initialization
-  // ============================================================================
+export function initializeContainer(): void {
+  // Register interface implementations
+  // TSyringe will use the @singleton and @injectable decorators
+  // to manage the lifecycle and dependencies automatically
 
-  const authService = new SuperTokensAuthService();
-  const userRepository = new InMemoryUserRepository();
-  const emailService = new ConsoleEmailService();
+  // Infrastructure services are already registered via @singleton decorators
+  // Use cases are already configured via @injectable decorators
 
-  const infra: InfrastructureServices = {
-    authService,
-    userRepository,
-    emailService,
-  };
+  console.log("TSyringe DI container initialized");
+}
 
-  // ============================================================================
-  // Use Case Layer Initialization
-  // ============================================================================
+/**
+ * Get the global tsyringe container instance
+ */
+export function getContainer(): typeof container {
+  return container;
+}
 
-  const useCases: UseCases = {
-    registerUser: new RegisterUserUseCase(userRepository, emailService),
-    updateUserProfile: new UpdateUserProfileUseCase(userRepository),
-  };
-
-  // ============================================================================
-  // Return Complete Container
-  // ============================================================================
-
+/**
+ * Helper function to get infrastructure services
+ */
+export function getInfrastructureServices(): InfrastructureServices {
   return {
-    infra,
-    useCases,
+    authService: container.resolve(SuperTokensAuthService),
+    userRepository: container.resolve(InMemoryUserRepository),
+    emailService: container.resolve(ConsoleEmailService),
   };
 }
 
 /**
- * Global container instance
- * Initialized once at app startup
+ * Helper function to get use cases
  */
-let containerInstance: Container | null = null;
-
-/**
- * Get the global container instance
- * @throws Error if container hasn't been initialized
- */
-export function getContainer(): Container {
-  if (!containerInstance) {
-    throw new Error(
-      "Container not initialized. Call initializeContainer() first."
-    );
-  }
-  return containerInstance;
-}
-
-/**
- * Initialize the global container
- * Should be called once at application startup
- */
-export function initializeContainer(): Container {
-  if (containerInstance) {
-    console.warn("Container already initialized, returning existing instance");
-    return containerInstance;
-  }
-
-  containerInstance = createContainer();
-  return containerInstance;
+export function getUseCases(): UseCases {
+  return {
+    registerUser: container.resolve(RegisterUserUseCase),
+    updateUserProfile: container.resolve(UpdateUserProfileUseCase),
+  };
 }
 
 /**
  * Reset the container (useful for testing)
  */
 export function resetContainer(): void {
-  containerInstance = null;
+  container.clearInstances();
 }
+
+// Export the tsyringe container for direct access
+export { container };

@@ -5,9 +5,11 @@
  * In production, replace this with a real email service (e.g., SendGrid, AWS SES, Resend)
  */
 
+import { singleton } from "tsyringe";
 import { IEmailService } from "../../domain";
 import { logger } from "../../utils/logger";
 
+@singleton()
 export class ConsoleEmailService implements IEmailService {
   async sendVerificationEmail(
     email: string,

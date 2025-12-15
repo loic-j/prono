@@ -7,21 +7,28 @@ import {
   loggingMiddleware,
   errorLoggingMiddleware,
 } from "./middleware/logging.middleware";
-import { initializeContainer } from "./container";
+import {
+  initializeContainer,
+  getInfrastructureServices,
+  getUseCases,
+} from "./container";
 import { AppContext } from "./types/context.types";
 
 // Initialize SuperTokens
 initSuperTokens();
 
 // Initialize DI Container
-const container = initializeContainer();
+initializeContainer();
 
 // Create OpenAPI-enabled app with proper typing
 const app = new OpenAPIHono<AppContext>();
 
 // Add DI container to context for all requests
 app.use("*", async (c, next) => {
-  c.set("container", container);
+  c.set("container", {
+    infra: getInfrastructureServices(),
+    useCases: getUseCases(),
+  });
   await next();
 });
 

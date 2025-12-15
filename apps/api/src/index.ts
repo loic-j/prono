@@ -1,4 +1,7 @@
-// Initialize OpenTelemetry FIRST, before any other imports
+// Initialize reflect-metadata FIRST for tsyringe decorators
+import "reflect-metadata";
+
+// Initialize OpenTelemetry SECOND, before any other imports
 import { initTelemetry } from "./infra/telemetry";
 initTelemetry();
 
