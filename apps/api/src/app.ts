@@ -1,5 +1,5 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
-import { apiReference } from "@scalar/hono-api-reference";
+import { Scalar } from "@scalar/hono-api-reference";
 import { cors } from "hono/cors";
 import { httpInstrumentationMiddleware } from "@hono/otel";
 import { createRoutes } from "./routes";
@@ -102,13 +102,11 @@ app.doc("/openapi.json", {
 // Scalar API documentation UI
 app.get(
   "/docs",
-  apiReference({
+  Scalar({
     theme: "purple",
     pageTitle: "Prono API Documentation",
-    spec: {
-      url: "/openapi.json",
-    },
-  } as any)
+    url: "/openapi.json",
+  })
 );
 
 // Root endpoint - redirect to docs

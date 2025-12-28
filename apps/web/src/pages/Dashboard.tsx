@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import type { HelloResponse } from "@prono/types";
 import { useSessionContext } from "supertokens-auth-react/recipe/session";
 import { signOut } from "supertokens-auth-react/recipe/emailpassword";
 import { redirectToAuth } from "supertokens-auth-react";
+import { apiClient } from "../lib/api-client";
 
 function Dashboard() {
   const [protectedMessage, setProtectedMessage] = useState<string>("");
@@ -20,9 +20,8 @@ function Dashboard() {
     setProtectedLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/hello/me", {
-        credentials: "include", // Important: include cookies for session
-      });
+      // Use Hono RPC client for type-safe API calls
+      const res = await apiClient.api.hello.me.$get();
 
       if (res.status === 401) {
         setError("Not authenticated. Please log in.");
@@ -33,7 +32,8 @@ function Dashboard() {
         throw new Error(`HTTP error! status: ${res.status}`);
       }
 
-      const data: HelloResponse = await res.json();
+      // Response is fully typed!
+      const data = await res.json();
       setProtectedMessage(data.message);
     } catch (error) {
       console.error("Error fetching protected greeting:", error);
