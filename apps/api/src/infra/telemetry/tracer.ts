@@ -20,7 +20,7 @@ export function initTelemetry() {
   // Default to Jaeger's OTLP HTTP endpoint
   const otlpEndpoint =
     process.env.OTEL_EXPORTER_OTLP_ENDPOINT ||
-    "http://localhost:4318/v1/traces";
+    "http://localhost:14318/v1/traces";
 
   // Create resource with service information
   const resource = resourceFromAttributes({

@@ -44,6 +44,19 @@ services:
       timeout: 5s
       retries: 5
 
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger
+    ports:
+      - "16687:16686" # Jaeger UI
+      - "14317:4317" # OTLP gRPC receiver
+      - "14318:4318" # OTLP HTTP receiver
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    networks:
+      - app_network
+    restart: unless-stopped
+
 networks:
   app_network:
     driver: bridge
