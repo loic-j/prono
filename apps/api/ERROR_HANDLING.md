@@ -7,7 +7,7 @@ This project follows clean architecture principles for error handling. Errors ar
 1. **Separation of Concerns**: Business logic throws errors, HTTP layer handles responses
 2. **Type Safety**: All errors are strongly typed and extend base error classes
 3. **Structured Logging**: Errors include context and are logged appropriately
-4. **Client-Friendly**: API clients receive consistent, parseable error responses
+4. **Client-Friendly**: API clients receive consistent, parsable error responses
 
 ## Error Hierarchy
 
