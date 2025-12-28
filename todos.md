@@ -6,5 +6,5 @@
 - add api test
 - add ci
 
-- Add new db for application and use it to store users
 - fix frontend client api type inference issue
+- add jaeger compose service and test it
