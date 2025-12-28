@@ -23,6 +23,9 @@ importers:
       '@hono/node-server':
         specifier: ^1.5.0
         version: 1.19.7(hono@4.11.0)
+      '@hono/otel':
+        specifier: ^1.1.0
+        version: 1.1.0(hono@4.11.0)
       '@hono/zod-openapi':
         specifier: ^1.1.5
         version: 1.1.5(hono@4.11.0)(zod@4.1.13)
@@ -546,6 +549,11 @@ packages:
     engines: {node: '>=18.14.1'}
     peerDependencies:
       hono: ^4
+
+  '@hono/otel@1.1.0':
+    resolution: {integrity: sha512-3lXExGP+odVTF3W1kTHgRGw4d4xdiYpeRs8dnTwfnHfw5uGEXgUzmkB4/ZQd3tDxYRt7eUhnWuBk5ChV97eqkA==}
+    peerDependencies:
+      hono: '>=4.0.0'
 
   '@hono/zod-openapi@1.1.5':
     resolution: {integrity: sha512-EAnY6ad4yt/MUKHx716BEGGOXSl5d0/FOLozOYB/pmSEFq07qrzefKFtBEMAgd3hlpJXjH+4lwgTtlAo+BGBgQ==}
@@ -2395,6 +2403,12 @@ snapshots:
 
   '@hono/node-server@1.19.7(hono@4.11.0)':
     dependencies:
+      hono: 4.11.0
+
+  '@hono/otel@1.1.0(hono@4.11.0)':
+    dependencies:
+      '@opentelemetry/api': 1.9.0
+      '@opentelemetry/semantic-conventions': 1.38.0
       hono: 4.11.0
 
   '@hono/zod-openapi@1.1.5(hono@4.11.0)(zod@4.1.13)':

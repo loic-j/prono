@@ -3,6 +3,8 @@ import { trace, context, SpanStatusCode } from "@opentelemetry/api";
 
 /**
  * Create a production-ready logger with OpenTelemetry trace context
+ *
+ * Works seamlessly with @hono/otel for automatic trace context injection
  */
 function createLogger() {
   const isDevelopment = process.env.NODE_ENV !== "production";
@@ -113,6 +115,9 @@ export function createChildLogger(bindings: Record<string, any>) {
 
 /**
  * Utility to wrap async operations with automatic error logging and span status
+ *
+ * Creates a child span for the operation, useful for tracing specific operations
+ * within a request. @hono/otel manages the parent span automatically.
  *
  * Usage:
  * ```typescript

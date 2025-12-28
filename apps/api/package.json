@@ -12,6 +12,7 @@
     },
     "dependencies": {
         "@hono/node-server": "^1.5.0",
+        "@hono/otel": "^1.1.0",
         "@hono/zod-openapi": "^1.1.5",
         "@opentelemetry/api": "^1.9.0",
         "@opentelemetry/auto-instrumentations-node": "^0.67.2",

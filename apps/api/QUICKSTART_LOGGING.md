@@ -1,10 +1,11 @@
-# Quick Start Guide
+# Quick Start Guide - Logging with @hono/otel
 
 ## Installation Complete ✅
 
 Your application now has:
 - 🪵 **Pino** structured logger with automatic trace context
-- 🔍 **OpenTelemetry** distributed tracing with auto-instrumentation
+- ⚡ **@hono/otel** automatic OpenTelemetry instrumentation for Hono
+- 🔍 **OpenTelemetry** distributed tracing
 - 🔗 **W3C Trace Context** propagation across requests
 - 📊 **OTLP exporter** for sending traces to observability backends
 
@@ -50,6 +51,8 @@ You'll see logs like:
     duration_ms: 5
 ```
 
+**Note:** The trace_id and span_id are automatically injected by @hono/otel into the OpenTelemetry context, and the logger picks them up automatically.
+
 ### 3. View Traces with Jaeger (Optional)
 
 Start Jaeger locally:
@@ -61,6 +64,12 @@ docker run -d --name jaeger \
 ```
 
 Then visit http://localhost:16686 to see your traces!
+
+Each request will appear as a span with:
+- HTTP method, URL, and status code
+- Request duration
+- Any errors or exceptions
+- Child spans for operations using `withLogging()`
 
 ## Using the Logger in Your Code
 
@@ -84,6 +93,20 @@ import { withLogging } from '@/utils/logger';
 const result = await withLogging('database-query', async () => {
   return await db.users.find({ id: userId });
 }, { userId });
+```
+
+## How @hono/otel Works
+
+1. **Automatic Span Creation**: Every incoming HTTP request gets a span automatically
+2. **Trace Context Extraction**: W3C Trace Context headers (traceparent/tracestate) are automatically extracted
+3. **Context Propagation**: Trace context is available throughout the request lifecycle
+4. **HTTP Metadata**: Method, URL, status code automatically added to spans
+5. **Error Handling**: Exceptions automatically recorded in spans
+
+All of this happens with just one line:
+```typescript
+import { httpInstrumentationMiddleware } from "@hono/otel";
+app.use("*", httpInstrumentationMiddleware());
 ```
 
 ## Environment Variables

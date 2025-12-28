@@ -6,11 +6,13 @@ import {
   ATTR_SERVICE_NAME,
   ATTR_SERVICE_VERSION,
 } from "@opentelemetry/semantic-conventions";
-import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-node";
 
 /**
- * Initialize OpenTelemetry for distributed tracing
+ * Initialize OpenTelemetry for distributed tracing with @hono/otel
  * This should be called BEFORE any other imports to ensure auto-instrumentation works
+ *
+ * @hono/otel will handle Hono-specific instrumentation automatically,
+ * this setup handles the core OpenTelemetry SDK configuration
  */
 export function initTelemetry() {
   const serviceName = process.env.OTEL_SERVICE_NAME || "prono-api";
@@ -31,17 +33,15 @@ export function initTelemetry() {
   });
 
   // Initialize the SDK
+  // Note: @hono/otel middleware will handle Hono-specific tracing
   const sdk = new NodeSDK({
     resource,
-    spanProcessors: [new BatchSpanProcessor(traceExporter)],
+    traceExporter,
     instrumentations: [
       getNodeAutoInstrumentations({
-        // Auto-instrument HTTP, Express, and other common libraries
+        // Disable HTTP instrumentation as @hono/otel handles it
         "@opentelemetry/instrumentation-http": {
-          enabled: true,
-        },
-        "@opentelemetry/instrumentation-express": {
-          enabled: true,
+          enabled: false,
         },
         "@opentelemetry/instrumentation-dns": {
           enabled: false, // Usually too noisy

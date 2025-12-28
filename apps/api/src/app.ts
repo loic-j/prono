@@ -1,6 +1,7 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { apiReference } from "@scalar/hono-api-reference";
 import { cors } from "hono/cors";
+import { httpInstrumentationMiddleware } from "@hono/otel";
 import { createRoutes } from "./routes";
 import { initSuperTokens } from "./infra/supertokens";
 import {
@@ -23,6 +24,9 @@ initializeContainer();
 // Create OpenAPI-enabled app with proper typing
 const app = new OpenAPIHono<AppContext>();
 
+// Apply @hono/otel instrumentation for automatic tracing
+app.use("*", httpInstrumentationMiddleware());
+
 // Add DI container to context for all requests
 app.use("*", async (c, next) => {
   c.set("container", {
@@ -32,7 +36,7 @@ app.use("*", async (c, next) => {
   await next();
 });
 
-// Add logging middleware with OpenTelemetry trace propagation
+// Add logging middleware (trace context is managed by @hono/otel)
 app.use("*", loggingMiddleware);
 
 // Add CORS middleware - must be configured for SuperTokens
