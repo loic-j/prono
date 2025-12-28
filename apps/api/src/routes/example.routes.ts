@@ -57,13 +57,9 @@ exampleRoutes.post(
 );
 
 // Example auth check endpoint (demonstrates auth error handling)
-exampleRoutes.get(
-  "/examples/auth-check",
-  authMiddleware,
-  async (c) => {
-    const { exampleAuthCheckHandler } = await import(
-      "../handlers/example.errors.handler"
-    );
-    return exampleAuthCheckHandler(c);
-  }
-);
+exampleRoutes.get("/examples/auth-check", authMiddleware, async (c) => {
+  const { exampleAuthCheckHandler } = await import(
+    "../handlers/example.errors.handler"
+  );
+  return exampleAuthCheckHandler(c);
+});
