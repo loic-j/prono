@@ -5,44 +5,20 @@ import { ErrorFactory, ValidationError } from "../domain/errors";
  * Example handler demonstrating proper error handling
  *
  * This handler shows how to:
- * - Use error factories for common scenarios
+ * - Use zValidator middleware for automatic validation
+ * - Apply custom business logic validation
  * - Throw custom validation errors
  * - Let errors bubble up to Hono's error handler
+ *
+ * Note: Basic validation (required, type, format) is handled by zValidator middleware
+ * This handler focuses on custom business logic validation
  */
-export const exampleValidationHandler = async (c: Context) => {
-  // Parse request body
-  const body = await c.req.json().catch(() => {
-    throw ErrorFactory.badRequest.malformedBody("Invalid JSON");
-  });
+export const exampleValidationHandler = async (c: any) => {
+  // Get validated data from zValidator middleware
+  const { email, age, role } = c.req.valid("json");
 
-  const { email, age, role } = body;
-
-  // Validation using error factories
-  if (!email) {
-    throw ErrorFactory.validation.required("email");
-  }
-
-  if (!email.includes("@")) {
-    throw ErrorFactory.validation.invalidFormat("email", "valid email address");
-  }
-
-  if (!age) {
-    throw ErrorFactory.validation.required("age");
-  }
-
-  if (typeof age !== "number" || age < 18 || age > 120) {
-    throw ErrorFactory.validation.outOfRange("age", 18, 120, age);
-  }
-
-  if (role && !["admin", "user", "guest"].includes(role)) {
-    throw ErrorFactory.validation.invalidEnum("role", [
-      "admin",
-      "user",
-      "guest",
-    ]);
-  }
-
-  // Custom validation error
+  // Custom business logic validation
+  // (Basic validation like required, email format, number range is done by zValidator)
   if (email.endsWith("@blocked-domain.com")) {
     throw new ValidationError("This email domain is not allowed", {
       email,

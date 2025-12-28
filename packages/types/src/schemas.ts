@@ -34,6 +34,44 @@ export const HelloResponseSchema = z.object({
 export type HelloResponse = z.infer<typeof HelloResponseSchema>;
 
 // ============================================================================
+// User Schemas
+// ============================================================================
+
+export const RegisterUserRequestSchema = z.object({
+  email: z.string().email().openapi({ example: "user@example.com" }),
+  password: z.string().min(8).openapi({ example: "securePass123!" }),
+});
+
+export const RegisterUserResponseSchema = z.object({
+  id: z.string().openapi({ example: "user_123456" }),
+  email: z.string().email().openapi({ example: "user@example.com" }),
+  message: z.string().openapi({ example: "User registered successfully" }),
+});
+
+export const UpdateUserProfileRequestSchema = z.object({
+  displayName: z.string().min(2).optional().openapi({ example: "John Doe" }),
+});
+
+export const UpdateUserProfileResponseSchema = z.object({
+  id: z.string().openapi({ example: "user_123456" }),
+  email: z.string().email().openapi({ example: "user@example.com" }),
+  displayName: z.string().optional().openapi({ example: "John Doe" }),
+  message: z.string().openapi({ example: "Profile updated successfully" }),
+});
+
+export const CurrentUserResponseSchema = z.object({
+  id: z.string().openapi({ example: "user_123456" }),
+  email: z.string().email().openapi({ example: "user@example.com" }),
+  displayName: z.string().openapi({ example: "John Doe" }),
+  timeJoined: z.number().openapi({ example: 1640000000000 }),
+  isVerified: z.boolean().openapi({ example: true }),
+});
+
+export const SignOutResponseSchema = z.object({
+  message: z.string().openapi({ example: "Signed out successfully" }),
+});
+
+// ============================================================================
 // Error Schemas
 // ============================================================================
 
@@ -58,4 +96,10 @@ export const schemas = {
   HealthResponseSchema,
   HelloResponseSchema,
   ErrorResponseSchema,
+  RegisterUserRequestSchema,
+  RegisterUserResponseSchema,
+  UpdateUserProfileRequestSchema,
+  UpdateUserProfileResponseSchema,
+  CurrentUserResponseSchema,
+  SignOutResponseSchema,
 };

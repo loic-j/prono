@@ -2,7 +2,9 @@ import { OpenAPIHono } from "@hono/zod-openapi";
 import { healthRoutes } from "./health.routes";
 import { greetingRoutes } from "./greeting.routes";
 import { authRoutes } from "./auth.routes";
+import { authCustomRoutes } from "./auth-custom.routes";
 import { userRoutes } from "./user.routes";
+import { exampleRoutes } from "./example.routes";
 
 /**
  * Main router that combines all route modules
@@ -17,7 +19,9 @@ export const createRoutes = () => {
   const api = new OpenAPIHono();
   api.route("/", greetingRoutes);
   api.route("/", authRoutes);
+  api.route("/", authCustomRoutes);
   api.route("/", userRoutes);
+  api.route("/", exampleRoutes);
   app.route("/api", api);
 
   return app;

@@ -11,8 +11,8 @@ import { Context } from "hono";
  * Shows how to get use cases from the container
  */
 export const registerUserHandler = async (c: any) => {
-  // Parse and validate request body
-  const { email, password } = await c.req.json();
+  // Get validated data from middleware
+  const { email, password } = c.req.valid("json");
 
   // Get use case from DI container
   const container = c.get("container");
@@ -42,7 +42,9 @@ export const updateUserProfileHandler = async (c: any) => {
   }
 
   const userId = session.getUserId();
-  const { displayName } = await c.req.json();
+
+  // Get validated data from middleware
+  const { displayName } = c.req.valid("json");
 
   // Get use case from DI container
   const container = c.get("container");

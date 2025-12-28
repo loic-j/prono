@@ -20,7 +20,9 @@ export const exampleProtectedHandler = async (
     email: user?.email,
     displayName: user?.getDisplayName(),
     isVerified: user?.isVerified(),
-    timeJoined: user?.timeJoined,
+    timeJoined: user?.timeJoined
+      ? new Date(user.timeJoined).toISOString()
+      : undefined,
     metadata: user?.metadata,
   });
 };
