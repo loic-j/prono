@@ -17,6 +17,7 @@ import {
 export function initTelemetry() {
   const serviceName = process.env.OTEL_SERVICE_NAME || "prono-api";
   const serviceVersion = process.env.SERVICE_VERSION || "1.0.0";
+  // Default to Jaeger's OTLP HTTP endpoint
   const otlpEndpoint =
     process.env.OTEL_EXPORTER_OTLP_ENDPOINT ||
     "http://localhost:4318/v1/traces";
